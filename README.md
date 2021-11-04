@@ -1,16 +1,8 @@
+# Graph Denoising with Framelet Regularizer
 
-# How Framelets Enhance Graph Neural Networks
+This repository is the official implementation of [Graph Denoising with Framelet Regularizer]().
 
-This repository is the official implementation of [How Framelets Enhance Graph Neural Networks](https://arxiv.org/abs/2102.06986).
-
-![UFGConv](fig_ufgconv.png)
-
-The above figure shows ***framelet convolution (UFGConv)***: given a graph with structure (adjacency matrix) and feature information, the target is to properly embed the graph by graph convolution. The demonstrative sample is a graph with 10 nodes and 3 features extracted from **PROTEINS** in **TUDataset**. The framelet dilation and scale level are both set to default value 2. The ***UFGConv*** applies tensor-based framelet transform, and constructs one low-pass and two high-pass *framelet transform matrices*, which are then multiplied by the input feature matrix to produce the framelet coefficients. Moreover, these coefficients are processed by the trainable network filter and compressed by the shrinkage. Finally, the activated coefficients are reconstructed and sent back to the spatial domain as the convolution output by using the framelet transform matrices again with transposed alignment.
-
-<img src="fig_ufgpool.png" align="center" width="700">
-
-The above figure shows ***framelet pooling (UFGPool-Sum or UFGPool-Spectrum)***: the three framelet transform matrices are retrieved from the figure for ***framelet convolution*** with the same protein sample and parameter setting. The scale-wise framelet coefficients are aggregated to three vectors by sum or sum of squares (framelet spectrum). The (1 low pass and 2 high passes) vectors are then concatenated as the readout for the classifier.
-
+![DoT](DoT.png)
 
 ## Requirements
 
@@ -20,36 +12,24 @@ To install requirements:
 pip install -r requirements.txt
 ```
 
-## Node Classification - UFGConv
-To reproduce the results in Table 1 of the main text, you can use the following command
+## All Experiments
+To reproduce the results in the paper, you can use the following command
 
 ```
-python UFGConv_relu.py --dataset Cora
+python main.py 
 ```
-for ReLU model. To reproduce the results for shrinkage model, please run the following script.
+The key arguments are: --dataset, --filter_type, --attack, and --GConv_type. For example, if you would like to reproduce the result for DoT with GCN on Cora in Table 1, you can run the following command
 
 ```
-python UFGConv_shrinkage.py --dataset Cora
+python main.py --dataset Cora --filter_type DoT --attack Mix --GConv_type GCN
 ```
-The above two commands are for Cora. To reproduce the experiment results for the other datasets, you can change the argument of --dataset to Citeseer or Pubmed. Other hyperparameters include: --lr, --wd, --nhid, --Lev, --s, --dropout. Please note that the default values of these hyperparameters are only for Cora. 
+Other tunable hyperparameters include: --lr, --wd, --nhid, --dropout, --admm_iter, --rho, --lam, etc.
 
-## Graph Classification - UFGPool
-To reproduce the results in Table 3 of the main text, you can use the following command:
-
-```
-python UFGPool.py --dataset PROTEINS
-```
-Other hyperparameters include: --lr, --wd, --nhid, --Lev, --s, --dropout.
 
 ## Citation 
 If you consider our codes and datasets useful, please cite:
 ```
-@inproceedings{zheng2021how,
-  title={How Framelets Enhance Graph Neural Networks},
-  author={Zheng, Xuebin and Zhou, Bingxin and Gao, Junbin and Wang, Yu Guang and Lio, Pietro and Li, Ming and Montufar, Guido},
-  booktitle={ICML},
-  year={2021}
-}
+
 ```
 
 ## Contributing
