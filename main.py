@@ -5,9 +5,10 @@ from torch_geometric.datasets import Planetoid, WikiCS
 from torch_geometric.utils import get_laplacian, degree
 from ufg_layer import UFGConv_S, UFGConv_R
 from denoising_filters import *
-from graph_attack import *
+from graph_attack import edge_attack, node_attack
 from utils import scipy_to_torch_sparse, get_operator
 from config import parser
+import random
 import os.path as osp
 torch.set_default_dtype(torch.float64)
 torch.set_default_tensor_type(torch.DoubleTensor)
@@ -41,7 +42,7 @@ class Net(nn.Module):
         if self.filter_type.lower() == 'none':
             if self.conv_type.lower() == 'gat':
                 x = F.elu(x)
-            elif self.conv_type.lower() == 'gcn' or 'ufg_r':
+            elif self.conv_type.lower() == ('gcn' or 'ufg_r'):
                 x = F.relu(x)
 
         x = self.drop1(x)
@@ -73,6 +74,8 @@ class Net(nn.Module):
 if __name__ == '__main__':
     # get config
     args = parser.parse_args()
+    if args.filter_type.lower() == 'dot':
+        args.filter_type = 'Breg'
 
     # set random seed for reproducible results
     random.seed(args.seed)
@@ -98,17 +101,29 @@ if __name__ == '__main__':
         data['val_mask'] = data['val_mask'][:, 0]
 
     # attack (optional)
-    if (args.attack.lower() == 'edge') or (args.attack.lower() == 'mix'):
+    if args.attack.lower() == 'edge':
+        edge_index_attack = edge_attack(data, 0.750, data.edge_index)  # first time edge attack by reducing 25% edge volumes
+        edge_index_attack = edge_attack(data, 1.333, edge_index_attack)  # second time edge attack by increasing 25% edge volumes
+        data.edge_index = edge_index_attack
+    elif args.attack.lower() == 'node':
+        if dataname.lower() == 'wikics':
+            x_attack = node_attack(data.x, 0.50, normal=True)
+        else:
+            x_attack = node_attack(data.x, 0.50)
+        data.x = x_attack
+    elif args.attack.lower() == 'mix':
         edge_index_attack = edge_attack(data, 0.875, data.edge_index)  # first time edge attack by reducing 12.5% edge volumes
         edge_index_attack = edge_attack(data, 1.143, edge_index_attack)  # second time edge attack by increasing 12.5% edge volumes
         data.edge_index = edge_index_attack
-
-    if (args.attack.lower() == 'node') or (args.attack.lower() == 'mix'):
         if dataname.lower() == 'wikics':
             x_attack = node_attack(data.x, 0.25, normal=True)  # 25% node attack
         else:
             x_attack = node_attack(data.x, 0.25)  # 25% node attack
         data.x = x_attack
+    elif args.attack.lower() == 'none':
+        pass
+    else:
+        raise Exception('invalid attack type')
 
     # get graph Laplacian
     L = get_laplacian(data.edge_index, num_nodes=num_nodes, normalization='sym')
@@ -167,13 +182,13 @@ if __name__ == '__main__':
     elif args.filter_type.lower() == 'edge':
         smoothing = EdgeDenoisingADMM(num_nodes, args.nhid, args.rho, args.mu1_0, args.mu3_0,
                                       args.mu4_0, args.admm_iter)
-    elif args.filter_type.lower() == 'Breg':
-        smoothing = BergmanADMM(num_nodes, args.nhid, r, args.Lev, args.nu, args.rho, args.mu1_0,
+    elif args.filter_type.lower() == 'breg':
+        smoothing = BregmanADMM(num_nodes, args.nhid, r, args.Lev, args.nu, args.rho, args.mu1_0,
                                 args.mu2_0, args.mu3_0, args.mu4_0, args.lam, args.admm_iter)
     elif args.filter_type.lower() == 'none':
         smoothing = None
     else:
-        raise Exception('Invalid FilterType')
+        raise Exception('invalid FilterType')
 
     # create result matrices
     num_epochs = args.epochs
