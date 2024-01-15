@@ -18,7 +18,8 @@ def soft_thresholding(x, soft_eta, mode):
     """
     assert mode in ('element', 'row'), 'shrinkage type is invalid (element or row)'
     if mode == 'row':
-        row_norm = torch.linalg.norm(x, dim=1).unsqueeze(1)
+        norm_copy = torch.linalg.norm(x, dim=1).clone()  # repair graident manipulation issue 
+        row_norm = torch.unsqueeze(norm_copy, 1)
         row_norm.clamp_(1e-12)
         row_thresh = F.relu(row_norm - soft_eta) / row_norm
         out = x * row_thresh

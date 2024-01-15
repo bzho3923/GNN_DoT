@@ -1,7 +1,7 @@
 from scipy import sparse
 from scipy.sparse.linalg import lobpcg
 from torch_geometric.nn import GCNConv, GATConv
-from torch_geometric.datasets import Planetoid, WikiCS
+from torch_geometric.datasets import Planetoid, WikiCS, WebKB
 from torch_geometric.utils import get_laplacian, degree
 from ufg_layer import UFGConv_S, UFGConv_R
 from denoising_filters import *
@@ -12,6 +12,7 @@ import random
 import os.path as osp
 torch.set_default_dtype(torch.float64)
 torch.set_default_tensor_type(torch.DoubleTensor)
+torch.autograd.set_detect_anomaly(True)
 
 
 class Net(nn.Module):
@@ -91,14 +92,20 @@ if __name__ == '__main__':
     rootname = osp.join(osp.abspath(''), 'data', dataname)
     if dataname.lower() == 'wikics':
         dataset = WikiCS(root=rootname)
+    elif dataname.lower() in ['wisconsin', 'texas', 'cornell']:
+        dataset = WebKB(root=rootname, name=dataname)
     else:
         dataset = Planetoid(root=rootname, name=dataname)
     data = dataset[0]
     num_nodes = data.x.shape[0]
     num_features = data.x.shape[1]
     if dataname.lower() == 'wikics':
-        data['train_mask'] = data['train_mask'][:, 0]
-        data['val_mask'] = data['val_mask'][:, 0]
+        data.train_mask = data.train_mask[:, 0]
+        data.val_mask = data.val_mask[:, 0]
+    elif dataname.lower() in ['wisconsin', 'texas', 'cornell']:
+        data.train_mask = data.train_mask[:, 0]
+        data.val_mask = data.val_mask[:, 0]
+        data.test_mask = data.test_mask[:, 0]
 
     # attack (optional)
     if args.attack.lower() == 'edge':

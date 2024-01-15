@@ -1,17 +1,17 @@
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, default='Cora',
-                    help='name of dataset with choices "Cora", "Citeseer", "Wikics"')
+parser.add_argument('--dataset', type=str, default='Wisconsin',
+                    help='name of dataset with choices "Cora", "Citeseer", "Wikics", "Wisconsin", "Cornell", "Texas"')
 parser.add_argument('--reps', type=int, default=10,
                     help='number of repetitions')
 parser.add_argument('--epochs', type=int, default=200,
                     help='number of epochs to train')
-parser.add_argument('--lr', type=float, default=0.005,
+parser.add_argument('--lr', type=float, default=0.0005,
                     help='learning rate')
 parser.add_argument('--wd', type=float, default=0.001,
                     help='weight decay')
-parser.add_argument('--nhid', type=int, default=16,
+parser.add_argument('--nhid', type=int, default=64,
                     help='number of hidden units')
 parser.add_argument('--Lev', type=int, default=2,
                     help='level of transform')
@@ -25,13 +25,13 @@ parser.add_argument('--shrinkage', type=str, default='soft',
                     help='soft or hard thresholding')
 parser.add_argument('--sigma', type=float, default=1.0,
                     help='standard deviation of the noise')
-parser.add_argument('--nu', type=float, default=500,
+parser.add_argument('--nu', type=float, default=10,
                     help='tight wavelet frame transform tuning parameter')
-parser.add_argument('--admm_iter', type=int, default=10,
+parser.add_argument('--admm_iter', type=int, default=3,
                     help='number of admm iterations')
 parser.add_argument('--rho', type=float, default=1.1,
                     help='piecewise function: constant and > 1')
-parser.add_argument('--mu1_0', type=float, default=1.0,
+parser.add_argument('--mu1_0', type=float, default=3.0,
                     help='initial value of mu1')
 parser.add_argument('--mu2_0', type=float, default=9.0,
                     help='initial value of mu2')
